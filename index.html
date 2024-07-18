@@ -1,0 +1,581 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Snike</title>
+ <style>
+    body {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  margin: 0;
+  background-color: #1f1f1f; /* Warna latar belakang tema gelap */
+  color: #fff; /* Warna teks untuk tema gelap */
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#score {
+  margin-bottom: 10px;
+  font-size: 20px;
+  color: #00c6ff; /* Warna teks untuk tema gelap */
+  text-shadow: 0 0 5px #00c6ff
+}
+
+#game-board {
+  display: grid;
+  grid-template-columns: repeat(20, 20px);
+  gap: 2px;
+  background-color: #333; /* Warna latar belakang papan permainan */
+  border-radius: 5px; /* Border radius untuk efek tombol */
+  padding: 10px; /* Padding untuk menjaga jarak antara border dan text  */
+  box-shadow: 0 0 5px #333;
+
+}
+
+#game-board .cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ccc;
+}
+
+#coin {
+  background-color: #FFD700; /* Warna kuning untuk koin */
+  box-shadow: 0 0 20px yellow; /* Efek glow (bersinar) untuk koin */
+}
+
+#snake-head {
+  background-color: cyan; /* Warna untuk kepala ular */
+  box-shadow: 0 0 20px cyan;
+}
+
+.snake-body {
+  background-color: blue; /* Warna untuk badan ular */
+  box-shadow: 0 0 20px blue;
+}
+
+#menu {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+#shop {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+#shop-container {
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #4CAF50; /* Warna untuk tombol */
+  color: white; /* Warna teks untuk tombol */
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 0 20px #4CAF50;
+}
+
+.reset-button {
+  background-color: #f44336; /* Warna untuk tombol reset */
+}
+
+/* Efek glow (bersinar) untuk tombol */
+button:hover {
+  box-shadow: 0 0 10px #4CAF50, 0 0 20px #4CAF50, 0 0 40px #4CAF50;
+}
+
+#arrow-buttons button {
+  background-color: lightblue; /* Warna untuk tombol arah */
+  color: darkgreen; /* Warna teks untuk tombol arah */
+  border: 1px solid yellow; /* Border untuk tombol arah */
+  font-size: 24px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px yellow; /* Efek glow (bersinar) untuk tombol arah */
+}
+
+#arrow-buttons button:hover {
+  box-shadow: 0 0 10px yellow, 0 0 20px yellow, 0 0 40px yellow; /* Efek glow tambahan saat hover */
+}
+  
+  /* Untuk elemen h1 */
+h1 {
+  font-size: 2em;
+  text-align: center;
+  text-shadow: 0 0 10px #00c6ff;
+}
+
+/* Untuk elemen h2 */
+h2 {
+  font-size: 1.5em;
+  text-align: center;
+  text-shadow: 0 0 10px #ff00de;
+}
+
+/* Untuk elemen li (list item) */
+li {
+  font-size: 0.7em;
+  text-align: center;
+  text-shadow: 0 0 10px #ff9900;
+  margin: 5px;
+}
+  </style>
+</head>
+<body>
+ <div id="game-container">
+    <div id="score">Skor: <span id="score-value">0</span></div>
+    <div id="game-board"></div>
+     <div id="arrow-buttons">
+      <button onclick="setDirection('up')">↑</button>
+      <br>
+      <button onclick="setDirection('left')">←</button>
+      <button onclick="setDirection('down')">↓</button>
+      <button onclick="setDirection('right')">→</button>
+    </div>
+    <div id="menu">
+      <button onclick="startGame()">Main</button>
+      <button onclick="openShop()">Achivement</button>     
+      <button onclick="saveGame()">Save</button>
+    </div>
+    <div id="shop">
+      <div id="shop-container">
+        <div id="shop-score">Total Score: <span id="shop-score-value">0</span></div>
+        <h2>Pencapaian Objektif</h2>
+
+
+
+  <ul id="Achievements">
+
+
+
+    <!-- Tempatkan pencapaian spesial di sini -->
+
+
+
+    <li>Belum Ada Pencapaian Objektif Yang Terbuka</li>
+
+
+
+    <!-- Anda dapat menambahkan lebih banyak pencapaian spesial di sini -->
+
+
+
+  </ul>
+    </div>
+      <h1>Mainkan Juga Di</h1>
+    <!-- Tombol-tombol link di bawah teks "Mainkan Juga Di" -->
+    <div id="link-buttons">
+      <button onclick="goToLink('https://zidandev.itch.io/snake-snike')">Itch Io</button>
+      <button onclick="goToLink('https://zidanean.blogspot.com/2023/12/snake-snike.html?m=1')">Zidanean Blog</button>
+      </div>
+  </div>
+  <script>
+    const boardSize = 20;
+    const cellSize = 20;
+    let snake = [{ x: 5, y: 5 }];
+    let direction = 'right';
+    let coin = { x: Math.floor(Math.random() * boardSize), y: Math.floor(Math.random() * boardSize) };
+    let score = 0;
+    let shopScore = 0;
+    let multiplier = 1;
+    let gameRunning = false;
+    let gameInterval;
+    const Achievements = [
+
+
+
+      { name: 'Worm 1', scoreNeeded: 1 },
+
+
+
+      
+
+
+
+      { name: 'Worm 2', scoreNeeded: 10 },
+
+
+
+      
+
+
+
+      { name: 'Worm 3', scoreNeeded: 25 },
+
+
+
+      
+
+
+
+      { name: 'caterpillar 1', scoreNeeded: 75 },
+
+
+
+      
+
+
+
+      { name: 'caterpillar 2', scoreNeeded: 150 },
+
+
+
+      
+
+
+
+      { name: 'caterpillar 3', scoreNeeded: 300 },
+
+
+
+      
+
+
+
+      { name: 'Small Snake 1', scoreNeeded: 400 },
+
+
+
+      
+
+
+
+      { name: 'Small Snake 2', scoreNeeded: 600 },
+
+
+
+      
+
+
+
+      { name: 'Small Snake 3', scoreNeeded: 800 },
+
+
+
+      
+
+
+
+      { name: 'The Snake', scoreNeeded: 1000 },
+
+
+
+      // Anda dapat menambahkan lebih banyak pencapaian spesial di sini
+
+
+
+    ];
+    function drawBoard() {
+      const board = document.getElementById('game-board');
+      board.innerHTML = '';
+
+      for (let y = 0; y < boardSize; y++) {
+        for (let x = 0; x < boardSize; x++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+
+          if (x === coin.x && y === coin.y) {
+            cell.id = 'coin';
+          } else if (x === snake[0].x && y === snake[0].y) {
+            cell.id = 'snake-head';
+          } else if (isSnakeBody(x, y)) {
+            cell.classList.add('snake-body');
+          }
+
+          board.appendChild(cell);
+        }
+      }
+      updateScore();
+    }
+
+    function updateScore() {
+      document.getElementById('score-value').innerText = score;
+    }
+
+    function updateShopScore() {
+  document.getElementById('shop-score-value').innerText = shopScore;
+  checkAchievements(); // Panggil fungsi checkAchievements setelah pembaruan shopScore
+   }
+
+    function isSnakeBody(x, y) {
+      return snake.slice(1).some(segment => segment.x === x && segment.y === y);
+    }
+
+    function move() {
+      const head = { ...snake[0] };
+
+      switch (direction) {
+        case 'up':
+          head.y = (head.y - 1 + boardSize) % boardSize;
+          break;
+        case 'down':
+          head.y = (head.y + 1) % boardSize;
+          break;
+        case 'left':
+          head.x = (head.x - 1 + boardSize) % boardSize;
+          break;
+        case 'right':
+          head.x = (head.x + 1) % boardSize;
+          break;
+      }
+
+      if (isCollision(head.x, head.y)) {
+        gameOver();
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === coin.x && head.y === coin.y) {
+  coin = { x: Math.floor(Math.random() * boardSize), y: Math.floor(Math.random() * boardSize) };
+  score++;
+  updateScore();
+  shopScore += multiplier;
+  updateShopScore();
+  saveShopScore();
+  } else {
+  snake.pop();
+  }
+
+      drawBoard();
+    }
+
+    function isCollision(x, y) {
+      return snake.some(segment => segment.x === x && segment.y === y);
+    }
+   
+   
+  // Fungsi untuk mengatur arah pergerakan
+    function setDirection(newDirection) {
+      direction = newDirection;
+    }
+   
+    function handleKeyPress(event) {
+      switch (event.key) {
+        case 'ArrowUp':
+          direction = 'up';
+          break;
+        case 'ArrowDown':
+          direction = 'down';
+          break;
+        case 'ArrowLeft':
+          direction = 'left';
+          break;
+        case 'ArrowRight':
+          direction = 'right';
+          break;
+      }
+    }
+
+    let touchStartX, touchStartY;
+
+    document.addEventListener('keydown', handleKeyPress);
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchcancel', handleTouchEnd);
+
+    function handleTouchStart(event) {
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+    }
+
+function handleTouchMove(event) {
+  if (!touchStartX || !touchStartY) return;
+
+  const touchEndX = event.touches[0].clientX;
+  const touchEndY = event.touches[0].clientY;
+
+  const deltaX = touchEndX - touchStartX;
+  const deltaY = touchEndY - touchStartY;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX > 0) {
+      direction = 'right';
+    } else {
+      direction = 'left';
+    }
+  } else {
+    if (deltaY > 0) {
+      direction = 'down';
+    } else {
+      direction = 'up';
+    }
+  }
+
+  touchStartX = touchEndX;
+  touchStartY = touchEndY;
+}
+   
+   function handleTouchEnd() {    
+      touchStartX = null;
+      touchStartY = null;
+}
+
+    function gameOver() {
+      alert('Game Over! Skor Anda: ' + score);
+      document.body.style.overflow = 'auto'; // Mengembalikan kemampuan gulir saat game berakhir
+      openShop();
+      stopGame();
+      saveScore();
+    }
+
+    function gameLoop() {
+      if (gameRunning) {
+        move();
+        changeSnakeColor('blue'); // Tambahkan pemanggilan fungsi untuk mengubah warna ular menjadi biru pada setiap iterasi game loop
+      }
+    }
+
+    function startGame() {
+      snake = [{ x: 5, y: 5 }];
+      direction = 'right';
+      coin = { x: Math.floor(Math.random() * boardSize), y: Math.floor(Math.random() * boardSize) };
+      score = 0;
+      document.body.style.overflow = 'hidden'; // Menghilangkan kemampuan gulir saat game dimulai
+      startGameLoop();
+      saveScore();
+
+      // Tambahkan pengecekan untuk warna biru
+      if (blueColorPurchased) {
+        changeSnakeColor('blue');
+      }
+    }
+
+    function startGameLoop() {
+      if (!gameRunning) {
+        gameRunning = true;
+        gameInterval = setInterval(gameLoop, 200);
+      }
+    }
+
+    function stopGame() {
+      gameRunning = false;
+      clearInterval(gameInterval);
+    }
+
+  
+  
+function openShop() {
+  const shop = document.getElementById('shop');
+  
+  if (shop.style.display === 'block') {
+    shop.style.display = 'none';
+  } else {
+    shop.style.display = 'block';
+  }
+}
+   
+    function saveGame() {
+      alert('Permainan disimpan!');
+      saveScore();
+      saveShopScore(); // Tambahkan penyimpanan skor di shop
+    }
+
+    function saveScore() {
+      localStorage.setItem('snakeGameScore', score);
+    }
+
+
+    function saveShopScore() {
+      localStorage.setItem('snakeGameShopScore', shopScore);
+    }
+
+   
+      // Fungsi untuk pergi ke link
+    function goToLink(url) {
+      window.location.href = url;
+    }
+   
+   const AchievementsElement = document.getElementById('Achievements');
+   
+    function checkAchievements() {
+  let achievedAchievements = [];
+
+  for (const achievement of Achievements) {
+    if (shopScore >= achievement.scoreNeeded) {
+      achievedAchievements.push(achievement.name);
+    }
+  }
+
+  if (achievedAchievements.length > 0) {
+    AchievementsElement.innerHTML = achievedAchievements
+      .map((achievement) => `<li>${achievement}: Terpenuhi</li>`)
+      .join('');
+  }
+}
+
+  
+    window.addEventListener('DOMContentLoaded', () => {
+      
+      
+    const savedShopScore = localStorage.getItem('snakeGameShopScore');
+  if (savedShopScore !== null) {
+    shopScore = parseInt(savedShopScore, 10);
+    updateShopScore();
+  }
+
+      
+      gameBoard.addEventListener('touchstart', (event) => {
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+  });
+
+  gameBoard.addEventListener('touchmove', (event) => {
+    touchMoveX = event.touches[0].clientX;
+    touchMoveY = event.touches[0].clientY;
+    handleSwipe(); // Tambahkan pemanggilan handleSwipe() saat terjadi pergerakan (move)
+  });
+
+  gameBoard.addEventListener('touchend', () => {
+    touchStartX = touchStartY = touchMoveX = touchMoveY = null;
+  });
+
+  function handleSwipe() {
+    if (!touchStartX || !touchStartY || !touchMoveX || !touchMoveY) return;
+
+    const deltaX = touchMoveX - touchStartX;
+    const deltaY = touchMoveY - touchStartY;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX > 0) {
+        direction = 'right';
+      } else {
+        direction = 'left';
+      }
+    } else {
+      if (deltaY > 0) {
+        direction = 'down';
+      } else {
+        direction = 'up';
+      }
+    }
+  }
+    });
+
+    setInterval(gameLoop, 200);
+  </script>
+   <h1> Pastikan Game Di Save</h1>
+   
+   <h2> Patch note 1.8</h2>
+   <li> Penambahan Glowing Effect</li>
+   <li> Perbaikan Banyak Bug</li>
+   <li> Perrombakan Tampilan</li>
+   <li> Tenang Nih Game Masih Simple Ntar Updatenya Mendatang</li>
+</body>
+</html>       
